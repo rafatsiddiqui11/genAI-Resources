@@ -1,0 +1,113 @@
+import tqdm
+import json
+import re
+
+from transformers import AutoTokenizer
+tokenizer = AutoTokenizer.from_pretrained("astronomer/Llama-3-8B-Instruct-GPTQ-4-Bit")
+# Define the CO-STAR based prompt
+instruct = """Analyze the sentiment of the sentence. Consider if the sentiment is straightforward, sarcastic, contains double meanings, or is expressed inversely.
+Classify the sentiment as positive, neutral, or negative.
+Provide a confidence score for the classification.
+Explain your reasoning, highlighting any nuances such as sarcasm, irony, or double meanings."""
+
+alpaca_prompt = """
+Below is an instruction that describes a task, paired with an input that provides further context.
+Think step by step and ensure you are providing a response at all costs.
+If you are unsure or do not understand the input, provide a response with sentiment as "Uncertain", confidence score of 0 and an explanation of your uncertainty.
+
+### Context:
+The task is to analyze the sentiment of a given sentence.
+
+### Objective:
+Classify the sentiment as positive, neutral, or negative.
+
+### Style:
+The response should be in a formal and analytical style.
+
+### Tone:
+Maintain an objective and neutral tone.
+
+### Audience:
+The target audience is data analysts.
+
+### Response:
+Provide a response in a pandas JSON format with three keys: sentiment, confidence_score, and explanation.
+
+Instruction:
+{}
+
+Input:
+{}
+
+Response:
+{}
+"""
+
+EOS_TOKEN = "<eos>"  # Define the EOS token
+
+def formatting_prompts_func(examples):
+    inst = instruct
+    inputs = examples["summary"]
+    outputs = examples["sentiment"]
+    instructions = [inst] * len(inputs)
+
+    texts = []
+    for instruction, input, output in zip(instructions, inputs, outputs):
+        text = alpaca_prompt.format(instruction, input, output) + EOS_TOKEN
+        texts.append(text)
+
+    return {"Instruction": instructions, "Input": inputs, "Response": outputs, "Text": texts}
+
+# Define the test examples
+test_ex = [
+    "I'm so excited to be stuck in this meeting again.",
+    "I'm loving this new restaurant! The food is amazing!",
+    "Yeah, it's okay, I guess.",
+    "I'm thrilled to be stuck in this traffic jam. Just what I needed, more time to waste.",
+    "I'm so glad we're finally getting a raise!",
+    "Yeah, about time. We've been working our butts off.",
+    "I'm just so excited to be doing laundry all day. It's the highlight of my week.",
+    "I'm really disappointed in the new policy. It's a total disaster.",
+    "I know, right? It's a joke.",
+    "I'm just so grateful to be stuck in this small town. It's the perfect place to get stuck in a rut.",
+    "I'm really happy to be going on vacation. We can finally relax.",
+    "Yeah, it's been a long time coming.",
+    "I'm just so thrilled to be stuck in this meeting that could've been an email. Just what I needed, more boredom.",
+    "I'm really excited to be trying this new restaurant. Have you tried it?",
+    "Yeah, it's okay. The service is terrible."
+]
+
+json_data_list = []
+
+# Wrap your iterable with tqdm
+for i in tqdm.tqdm(test_ex):
+    try:
+        inputs = tokenizer(
+        [
+            alpaca_prompt.format(
+                instruct, # instruction
+                i, # input
+                "", # output - leave this blank for generation!
+            )
+        ], return_tensors = "pt").to("cuda")
+
+        outputs = llm.generate(inputs)
+        result = tokenizer.batch_decode(outputs)
+        # Extract the JSON string from the text
+        # Extract the JSON string
+        match = re.search(r'{.*}', result[0], re.DOTALL)
+        if match is None:
+            print(f"No match found for input: {i}")
+            continue
+        json_string = match.group(0)
+
+        # Convert the JSON string to a Python dictionary
+        json_data = json.loads(json_string)
+        json_data_list.append(json_data)
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        json_data_list.append({})  # Append an empty dictionary
+        torch.cuda.empty_cache()
+        
+print(len(json_data_list))
+json_data_list
