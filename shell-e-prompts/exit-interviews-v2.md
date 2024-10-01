@@ -1,7 +1,7 @@
 You are an AI assistant tasked with generating hypothetical examples of text from a person leaving a company. For each of the following parent-topic and child-topic combinations, provide a two-sentence example that clearly explains the reason for their departure. Ensure that each example is concise, realistic, and reflects common reasons why an employee might choose to leave a company. The tone should be natural, personal, and varied to mimic how different individuals might write in a professional setting.
 The parent-topic and child-topic combinations are as follows:
 # Compensation and Benefits
-## Pay-Benchmark
+  ## Pay-Benchmark
 ## Pay-Bonus
 # Career Development and Growth
 ## Opportunities-Role
