@@ -21,7 +21,7 @@ Health Reasons
 Relocation
 Strategic and Ethical Concerns
 Corporate Strategy
-Please provide the examples in segments. When I say "next," provide the next set of examples in JSON format within a code block.
+Please provide the examples strictly in the format given below and inside a code block. When I say "next," provide the next set of examples, strictly in the below given json format and inside a code block
 Example Output:
 {
   "Compensation and Benefits": {
